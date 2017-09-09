@@ -30,6 +30,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "opencv2/video/tracking.hpp"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/videoio.hpp"
+#include "opencv2/highgui.hpp"
+
 #include "IOWrapper/Output3DWrapper.h"
 #include "IOWrapper/ImageDisplay.h"
 
@@ -71,7 +76,9 @@ int mode=0;
 bool firstRosSpin=false;
 
 using namespace dso;
+using namespace cv;
 
+Mat camframe, gray;
 
 void my_exit_handler(int s)
 {
@@ -454,6 +461,12 @@ int main( int argc, char** argv )
 
         for(int ii=0;ii<(int)idsToPlay.size(); ii++)
         {
+			printf("\n-- START OF FRAME %d \n", ii);
+			VideoCapture cap(0);
+
+			cap.set(CAP_PROP_FRAME_WIDTH, 640); // valueX = your wanted width 
+			cap.set(CAP_PROP_FRAME_HEIGHT, 480); // valueY = your wanted heigth   
+
             if(!fullSystem->initialized)	// if not initialized: reset start time.
             {
                 gettimeofday(&tv_start, NULL);
@@ -467,8 +480,31 @@ int main( int argc, char** argv )
             ImageAndExposure* img;
             if(preload)
                 img = preloadedImages[ii];
-            else
-                img = reader->getImage(i);
+            else {
+				printf("get image.\n");
+
+				
+				cap >> camframe;
+				//cvtColor(camframe, gray, COLOR_BGR2GRAY);
+				//imshow("iotnxt robot", gray);
+
+				//img = reader->getImage(i);
+				img = new ImageAndExposure(640,480,ii);
+
+				for(int k=0; k<camframe.rows; k++)
+					for(int j=0; j<camframe.cols; j++) 
+					{						
+						int pixelnum = (k*640)+j;
+						img->image[pixelnum] = camframe.at<cv::Vec3b>(k,j)[0];
+					}
+						
+						
+				//img = new ImageAndExposure(320,240,ii);
+				
+
+				//std::cout << img->image[0] << std::endl;
+			}
+                
 
 
 
