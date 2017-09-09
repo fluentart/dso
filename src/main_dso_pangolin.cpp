@@ -360,6 +360,12 @@ void parseArgument(char* arg)
 
 int main( int argc, char** argv )
 {
+
+	VideoCapture cap(0);
+	cap.set(CAP_PROP_FRAME_WIDTH, 320); // valueX = your wanted width 
+	cap.set(CAP_PROP_FRAME_HEIGHT, 240); // valueY = your wanted heigth   
+
+
 	//setlocale(LC_ALL, "");
 	for(int i=1; i<argc;i++)
 		parseArgument(argv[i]);
@@ -459,13 +465,13 @@ int main( int argc, char** argv )
         double sInitializerOffset=0;
 
 
+
         for(int ii=0;ii<(int)idsToPlay.size(); ii++)
         {
 			printf("\n-- START OF FRAME %d \n", ii);
-			VideoCapture cap(0);
+			
 
-			cap.set(CAP_PROP_FRAME_WIDTH, 640); // valueX = your wanted width 
-			cap.set(CAP_PROP_FRAME_HEIGHT, 480); // valueY = your wanted heigth   
+
 
             if(!fullSystem->initialized)	// if not initialized: reset start time.
             {
@@ -477,37 +483,44 @@ int main( int argc, char** argv )
             int i = idsToPlay[ii];
 
 
-            ImageAndExposure* img;
+			ImageAndExposure* img;
+			cap >> camframe;
+			
+			img = new ImageAndExposure(320,240,0);
+
+			cvtColor(camframe, gray, COLOR_BGR2GRAY);
+			//imshow("iotnxt robot", gray);
+
+			for(int k=0; k<gray.rows; k++)
+				for(int j=0; j<gray.cols; j++) 
+				{						
+					//img->image[(k*320)+j] = gray.at<cv::Vec3b>(k,j)[0];
+					img->image[(k*320)+j] = gray.at<uchar>(k,j);
+				}
+
+			/*
             if(preload)
                 img = preloadedImages[ii];
             else {
 				printf("get image.\n");
 
+				img = reader->getImage(i);
+				
 				
 				cap >> camframe;
-				//cvtColor(camframe, gray, COLOR_BGR2GRAY);
-				//imshow("iotnxt robot", gray);
-
-				//img = reader->getImage(i);
 				img = new ImageAndExposure(640,480,ii);
 
 				for(int k=0; k<camframe.rows; k++)
 					for(int j=0; j<camframe.cols; j++) 
 					{						
-						int pixelnum = (k*640)+j;
-						img->image[pixelnum] = camframe.at<cv::Vec3b>(k,j)[0];
+						img->image[(k*640)+j] = camframe.at<cv::Vec3b>(k,j)[0];
 					}
-						
-						
-				//img = new ImageAndExposure(320,240,ii);
 				
-
-				//std::cout << img->image[0] << std::endl;
 			}
-                
+            */
 
 
-
+			/*
             bool skipFrame=false;
             if(playbackSpeed!=0)
             {
@@ -527,7 +540,8 @@ int main( int argc, char** argv )
 
             if(!skipFrame) fullSystem->addActiveFrame(img, i);
 
-
+			*/
+			fullSystem->addActiveFrame(img, i);
 
 
             delete img;
